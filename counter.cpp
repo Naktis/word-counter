@@ -5,31 +5,64 @@
 #include <map>
 #include <algorithm>
 #include <vector>
- 
-void read(std::map<std::string, int>& freq, std::vector<std::string>& urls, std::map<std::string, std::vector<int>>& lines) {
-    std::string row, word;
+
+std::string getFileName() {
+    bool badFile;
+    std::string fileName;
+    std::cout << "Enter file name (format: name.txt):\n";
+    std::cin >> fileName;
+    do {
+        try {
+            std::ifstream in (fileName);
+            if (!in.good())         // Check if the data file exists
+                throw 404;
+            else if (fileName.substr(fileName.length()-4,4) != ".txt") { // Check its extension
+                throw 321;
+            } else {
+                in.close();
+                badFile = false;
+            }
+        } catch (int exception) {
+            badFile = true;
+
+            std::cout << "File " << fileName;
+            if (exception == 404) 
+                std::cout << " doesn't exist. ";
+            else std::cout << " format is not supported. ";
+            std::cout << "Please enter another name:\n";
+
+            std::cin.clear();
+            std::cin.ignore(256,'\n');
+            std::cin >> fileName;
+        }
+    } while (badFile); // Repeat until existing and supported file is entered
+    return fileName;
+}
+
+void read(std::map<std::string, std::pair<int, std::vector<int>>>& words, std::vector<std::string>& urls) {
+    std::string row, w;
     std::istringstream rowStream;
     int numOfLine = 0;
 
-    std::ifstream in ("text.txt");
+    std::ifstream in (getFileName());
     while (std::getline(in, row)) {       // Continue reading lines until the end of file is reached
         rowStream.clear();                // Delete previous error flags
         rowStream.str(row);               // Make the line readable
         numOfLine ++;
 
-        while (rowStream >> word) {   // Continue reading words from ss until the end of line is reached
-            if (word.find("www.") != std::string::npos || word.find("http") != std::string::npos) {
-                urls.push_back(word);
+        while (rowStream >> w) {   // Continue reading words from ss until the end of line is reached
+            if (w.find("www.") != std::string::npos || w.find("http") != std::string::npos) {
+                urls.push_back(w);
             } else {
-                // Remove all non-letter symbols from the word
-                word.erase(std::remove_if(word.begin(), word.end(), [](char c) { return !isalpha(c); } ), word.end());
+                // Remove all non-letter symbols from the w
+                w.erase(std::remove_if(w.begin(), w.end(), [](char c) { return !isalpha(c); } ), w.end());
 
-                if (word != "") {   // If there are any characters left
+                if (w != "") {   // If there are any characters left
                     // Turn all letters to lowercase
-                    std::transform(word.begin(), word.end(), word.begin(), [](unsigned char c){ return std::tolower(c); });
+                    std::transform(w.begin(), w.end(), w.begin(), [](unsigned char c){ return std::tolower(c); });
 
-                    freq[word] ++;  // Find the word in the map and increase its value (frequency)
-                    lines[word].push_back(numOfLine);   // Save the line to the word's vector
+                    words[w].first ++;                   // Increase the word's frequencey
+                    words[w].second.push_back(numOfLine);// Save the line number to the vector of lines
                 }
             }
         }
@@ -37,23 +70,27 @@ void read(std::map<std::string, int>& freq, std::vector<std::string>& urls, std:
     in.close();
 }
 
-void print(std::map<std::string, int>& freq, std::vector<std::string>& urls, std::map<std::string, std::vector<int>>& lines) {
-    std::ofstream out ("stats.txt");
+void print(std::map<std::string, std::pair<int, std::vector<int>>>& words, std::vector<std::string>& urls) {
+    std::ofstream out ("statistics.txt");
     // Header
-    out << std::left << std::setw(15) << "Word" << std::setw(15) << "Frequency" << std::setw(15) << "Lines" << "\n";
+    out << std::left << std::setw(15) << "Word" << std::setw(15) 
+        << "Frequency" << std::setw(15) << "Lines" << "\n";
     for (int i = 0; i < 50; i ++)
         out << "-";
 
-    // Words, their frequency and lines where they are mentioned
-    for (auto f : freq)
-        if (f.second > 1) {
-            out << "\n" << std::setw(15) << f.first << std::setw(15) << f.second;
-            for (auto l : lines[f.first])
-                out << l << " ";
+    for (auto w : words)
+        if (w.second.first > 1) {                   // If the word's frequency is > 1
+            out << "\n" << std::setw(15) << w.first // Print the word
+                << std::setw(15) << w.second.first; // Print its frequency
+            for (auto line : w.second.second)       // Print the lines where the word mentioned
+                out << line << " ";
         }
 
     // URLs
-    out << "\n\nLinks\n------------------------------------\n";
+    out << "\n\nLinks\n";
+    for (int i = 0; i < 50; i ++)
+        out << "-";
+    out << "\n";
     for (std::string u : urls)
         out << u << "\n";
 
@@ -62,11 +99,11 @@ void print(std::map<std::string, int>& freq, std::vector<std::string>& urls, std
 
 int main() {
     std::vector<std::string> urls;
-    std::map<std::string, int> freq;    // Every key is mapped with default value zero
-    std::map<std::string, std::vector<int>> lines;
-    
-    read(freq, urls, lines);
-    print(freq, urls, lines);
+    std::map<std::string, std::pair<int, std::vector<int>>> words;
 
+    read(words, urls);
+    print(words, urls);
+
+    std::cout << "\nThe program finished successfully.\nTo view results, type statistics.txt";
     return 0;
 }

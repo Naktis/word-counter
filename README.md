@@ -2,7 +2,7 @@
 
 C++ console program which counts the frequency of words in a given text and prints out all words that have been mentioned more than 2 times, their places in lines and all links that appear in the text.
 
-The main *words* object was built using *std::map, std::string, std::vector* and *std::pair*
+The main *words* object was built using *std::map, std::string* and *std::vector*
 
 Supported input file format: .txt
 
@@ -17,4 +17,4 @@ Supported input file format: .txt
  4. Compile the program (If you use GCC, type `g++ counter.cpp -o counter`)
  5. Run the program with `./counter` (unix) or `counter` (win)
  6. Enter your file name with its extension (i.e. `text.txt`)
- 7. View the results by typing `statistics.txt`
+ 7. View the results by typing (./)`statistics.txt`

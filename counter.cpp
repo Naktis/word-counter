@@ -39,7 +39,7 @@ std::string getFileName() {
     return fileName;
 }
 
-void read(std::map<std::string, std::pair<int, std::vector<int>>>& words, std::vector<std::string>& urls) {
+void read(std::map<std::string, std::vector<int>>& words, std::vector<std::string>& urls) {
     std::string row, w;
     std::istringstream rowStream;
     int numOfLine = 0;
@@ -60,9 +60,8 @@ void read(std::map<std::string, std::pair<int, std::vector<int>>>& words, std::v
                 if (w != "") {   // If there are any characters left
                     // Turn all letters to lowercase
                     std::transform(w.begin(), w.end(), w.begin(), [](unsigned char c){ return std::tolower(c); });
-
-                    words[w].first ++;                   // Increase the word's frequencey
-                    words[w].second.push_back(numOfLine);// Save the line number to the vector of lines
+                    // Add the line number to the vector of lines
+                    words[w].push_back(numOfLine);
                 }
             }
         }
@@ -70,7 +69,7 @@ void read(std::map<std::string, std::pair<int, std::vector<int>>>& words, std::v
     in.close();
 }
 
-void print(std::map<std::string, std::pair<int, std::vector<int>>>& words, std::vector<std::string>& urls) {
+void print(std::map<std::string, std::vector<int>>& words, std::vector<std::string>& urls) {
     std::ofstream out ("statistics.txt");
     // Header
     out << std::left << std::setw(15) << "Word" << std::setw(15) 
@@ -79,10 +78,10 @@ void print(std::map<std::string, std::pair<int, std::vector<int>>>& words, std::
         out << "-";
 
     for (auto w : words)
-        if (w.second.first > 1) {                   // If the word's frequency is > 1
-            out << "\n" << std::setw(15) << w.first // Print the word
-                << std::setw(15) << w.second.first; // Print its frequency
-            for (auto line : w.second.second)       // Print the lines where the word mentioned
+        if (w.second.size() > 1) {                   // If the word's frequency is > 1
+            out << "\n" << std::setw(15) << w.first  // Print the word
+                << std::setw(15) << w.second.size(); // Print its frequency
+            for (auto line : w.second)       // Print lines where the word is mentioned
                 out << line << " ";
         }
 
@@ -99,11 +98,11 @@ void print(std::map<std::string, std::pair<int, std::vector<int>>>& words, std::
 
 int main() {
     std::vector<std::string> urls;
-    std::map<std::string, std::pair<int, std::vector<int>>> words;
+    std::map<std::string, std::vector<int>> words; // Key: word, value: lines of occurencies
 
     read(words, urls);
     print(words, urls);
 
-    std::cout << "\nThe program finished successfully.\nTo view results, type statistics.txt";
+    std::cout << "\nThe program finished successfully.\n";
     return 0;
 }
